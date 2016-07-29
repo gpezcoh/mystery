@@ -1,5 +1,5 @@
 var scene, camera, renderer, player;
-var geometry, material, water, middle, helper;
+var geometry, material, tree, grass, middle, helper;
 var mouse = {"x": 0, "y" : 0};
 var b = new THREE.Vector3(0,0,0);
 
@@ -122,8 +122,8 @@ function movePlayer(direction){
         nextSpot[0]++;
         checkSpot()
     }
-    camera.position.x = playerSpot[0] * 10
-    camera.position.z = 20 + playerSpot[1] * -10
+    camera.position.x = 50 + playerSpot[0] * 10
+    camera.position.z = 50 + playerSpot[1] * -10
     // moveCam()
 }
 
@@ -163,16 +163,15 @@ function checkNeighbors(i,j){
     return false
 }
 
-function addBlock(i,j){
-    instance = middle.clone();
+function addBlock(i,j,block,num){
+    instance = block.clone();
     console.log(i + " and " + j)
     instance.position.set( i*10, 0, j*-10 );
-    helper = new THREE.EdgesHelper( instance, "black" ); // or THREE.WireframeHelper
-    helper.material.linewidth = 3;
+    addHelper(instance)
     scene.add( instance );
-    scene.add( helper );
     map[j][i] = 1;
 }
+
 function addALotOfBlocks(){
     for (var i = 0; i < rows; ++i ) {
       for (var j = 0; j < cols; ++j) {
@@ -185,25 +184,70 @@ function addALotOfBlocks(){
     }
 }
 
+function makeTree(x,z){
+    geometry = new THREE.BoxGeometry( 10, 20, 10 );
+    material = new THREE.MeshBasicMaterial( { color: "brown"} );
+    var trunk =  new THREE.Mesh( geometry, material );
+    trunk.position.x = x*10;
+    trunk.position.y = 15;
+    trunk.position.z = z*-10;
+    scene.add(trunk);
+    addHelper(trunk)
+
+    geometry = new THREE.BoxGeometry( 20, 5, 20 );
+    material = new THREE.MeshBasicMaterial( { color: "green"} );
+    var leaves =  new THREE.Mesh( geometry, material );
+    leaves.position.x = x*10;
+    leaves.position.y = 20;
+    leaves.position.z = z*-10;
+    scene.add(leaves);
+    addHelper(leaves);
+
+    geometry = new THREE.BoxGeometry( 15, 5, 15 );
+    material = new THREE.MeshBasicMaterial( { color: "green"} );
+    var leaves =  new THREE.Mesh( geometry, material );
+    leaves.position.x = x*10;
+    leaves.position.y = 25;
+    leaves.position.z = z*-10;
+    scene.add(leaves);
+    addHelper(leaves);
+
+    geometry = new THREE.BoxGeometry( 10, 5, 10 );
+    material = new THREE.MeshBasicMaterial( { color: "green"} );
+    var leaves =  new THREE.Mesh( geometry, material );
+    leaves.position.x = x*10;
+    leaves.position.y = 30;
+    leaves.position.z = z*-10;
+    scene.add(leaves);
+    addHelper(leaves);
+}
+
+function addHelper(where){
+    helper = new THREE.EdgesHelper( where, "black" ); // or THREE.WireframeHelper
+    helper.material.linewidth = 2;
+    scene.add( helper );
+}
+
 function init() {
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
     // moveCam()
     camera.up = new THREE.Vector3(0,1,0);
-    camera.position.y = 300
-    camera.position.z = 150
+    camera.position.y = 200
+    camera.position.z = 200
     camera.lookAt(b)
-    camera.position.y = 80
-    camera.position.z = 20
+    camera.position.x = 50
+    camera.position.y = 100
+    camera.position.z = 50
 
     geometry = new THREE.BoxGeometry( 10, 10, 10 );
-    material = new THREE.MeshBasicMaterial( { color: "green"} );
+    material = new THREE.MeshBasicMaterial( { color: "#EEC45D"} );
     middle = new THREE.Mesh( geometry, material );
 
     geometry = new THREE.BoxGeometry( 10, 10, 10 );
-    material = new THREE.MeshBasicMaterial( { color: "blue"} );
-    water = new THREE.Mesh( geometry, material );
+    material = new THREE.MeshBasicMaterial( { color: "green"} );
+    grass = new THREE.Mesh( geometry, material );
     // scene.add( mesh );
 
     geometry = new THREE.BoxGeometry( 10, 10, 10 );
@@ -214,33 +258,31 @@ function init() {
     player.position.z = 0;
     scene.add(player)
 
-    helper = new THREE.EdgesHelper( player, "black" ); // or THREE.WireframeHelper
-    helper.material.linewidth = 2;
-    scene.add( helper );
+    addHelper(player);
 
     makeMap();
 
-    for (var i = 0; i < 3; ++i ) {
-      for (var j = 0; j < 3; ++j) {
-        addBlock(i,j)
-      }
-    }
-    addALotOfBlocks()
-
-    // for (var i = 0; i < rows; ++i ) {
-    //   for (var j = 0; j < cols; ++j) {
-    //     if(Math.abs(i-j) < 3){
-    //         instance = middle.clone();
-    //         console.log(i + " and " + j)
-    //         instance.position.set( i*10, 0, j*-10 );
-    //         helper = new THREE.EdgesHelper( instance, "black" ); // or THREE.WireframeHelper
-    //         helper.material.linewidth = 2;
-    //         scene.add( instance );
-    //         scene.add( helper );
-    //         map[i][j] = 1;
-    //     }
+    // for (var i = 0; i < 3; ++i ) {
+    //   for (var j = 0; j < 3; ++j) {
+    //     addBlock(i,j)
     //   }
     // }
+    // addALotOfBlocks()
+
+    for (var i = 0; i < rows; ++i ) {
+      for (var j = 0; j < cols; ++j) {
+        if(Math.abs(i-j) < 4){
+            addBlock(i,j, middle,1)
+        }
+        else{
+            addBlock(i,j,grass,0)
+            if(Math.random() > .9 && (i > 0 && j > 0) && (map[j-1][i] !== 0 && map[j-1][i-1] !== 0 && map[j][i-1] !== 0)){
+                makeTree(i,j);
+                map[j][i] = 0;
+            }
+        }
+      }
+    }
 
     console.log(map)
 
