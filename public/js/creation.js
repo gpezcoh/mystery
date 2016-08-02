@@ -3,7 +3,7 @@ function makeMap() {
     for (var i = 0; i < rows; ++i ) {
         test = [];
         for (var j = 0; j < cols; ++j) {
-            test.push(new MapPiece());
+            test.push(0);
         }
         map.push(test);
     }
@@ -29,27 +29,13 @@ function checkNeighbors(i,j){
     return false
 }
 
-function addBlock(i,j,block,type){
+function addBlock(i,j,block,type,movable){
     instance = block.clone();
     // console.log(i + " and " + j)
     instance.position.set( i*10, 0, j*-10 );
-    addHelper(instance)
+    helper = addHelper(instance)
     scene.add( instance );
-    map[j][i]["type"] = type;
-    map[j][i]["sprite"] = instance;
-    map[j][i]["spriteNum"] = 1;  
-}
-
-function addALotOfBlocks(){
-    for (var i = 0; i < rows; ++i ) {
-      for (var j = 0; j < cols; ++j) {
-        if(i > 2 || j > 2){
-            if(checkNeighbors(i,j)){
-                addBlock(i,j);
-            }
-        }
-      }
-    }
+    map[j][i] = new MapPiece(type,[instance,helper],movable,instance.material)
 }
 
 function createTree(){
@@ -71,41 +57,44 @@ function createTree(){
 }
 
 function makeTree(x,z){
+	var tempGrass = map[z][x].sprite[0]
+	var helpers = []
     var tempTrunk =  trunk.clone();
     tempTrunk.position.x = x*10;
     tempTrunk.position.y = 15;
     tempTrunk.position.z = z*-10;
     scene.add(tempTrunk);
-    addHelper(tempTrunk)
+    helpers.push(addHelper(tempTrunk));
 
     var leaves0 =  leaves[0].clone()
     leaves0.position.x = x*10;
     leaves0.position.y = 20;
     leaves0.position.z = z*-10;
     scene.add(leaves0);
-    addHelper(leaves0);
+    helpers.push(addHelper(leaves0));
 
     var leaves1 =  leaves[1].clone()
     leaves1.position.x = x*10;
     leaves1.position.y = 25;
     leaves1.position.z = z*-10;
     scene.add(leaves1);
-    addHelper(leaves1);
+    helpers.push(addHelper(leaves1));
 
     var leaves2 =  leaves[2].clone()
     leaves2.position.x = x*10;
     leaves2.position.y = 30;
     leaves2.position.z = z*-10;
     scene.add(leaves2);
-    addHelper(leaves2);
+    helpers.push(addHelper(leaves2));
 
-    return [tempTrunk,leaves0,leaves1,leaves2]
+    return [tempGrass,tempTrunk,leaves0,leaves1,leaves2,helpers]
 }
 
 function addHelper(where){
     helper = new THREE.EdgesHelper( where, "black" ); // or THREE.WireframeHelper
     helper.material.linewidth = 2;
     scene.add( helper );
+    return helper;
 }
 
 function createCamera(){
@@ -123,7 +112,7 @@ function createCamera(){
 function createOriginalBlocks(){
     geometry = new THREE.BoxGeometry( 10, 10, 10 );
     material = new THREE.MeshBasicMaterial( { color: "#EEC45D"} );
-    middle = new THREE.Mesh( geometry, material );
+    ground = new THREE.Mesh( geometry, material );
 
     geometry = new THREE.BoxGeometry( 10, 10, 10 );
     material = new THREE.MeshBasicMaterial( { color: "green"} );
@@ -145,15 +134,13 @@ function createMap(){
     for (var i = 0; i < rows; ++i ) {
       for (var j = 0; j < cols; ++j) {
         if(Math.abs(i-j) < 4){
-            addBlock(i,j, middle,"path")
+            addBlock(i,j, ground,"ground",true)
         }
         else{
-            addBlock(i,j,grass,"grass")
-            if(Math.random() > .9 && (i > 0 && j > 0) && (map[j-1][i] !== 0 && map[j-1][i-1] !== 0 && map[j][i-1] !== 0)){
+            addBlock(i,j,grass,"grass",true)
+            if(Math.random() > .9 && (i > 0 && j > 0) && (map[j-1][i].type !== "tree" && map[j-1][i-1].type !== "tree" && map[j][i-1].type !== "tree")){
                 var tempTree = makeTree(i,j);
-                map[j][i]["type"] = "tree";
-                map[j][i]["sprite"] = tempTree;
-                map[j][i]["spriteNum"] = 4;  
+    			map[j][i] = new MapPiece("tree",tempTree,false,grass.material);
             }
         }
       }

@@ -5,9 +5,9 @@ class Player {
 		this.nextSpot = [0,0];
 		this.nextSelectSpot = [0,0];
 		this.selectSpot = [];
-		this.oldSelectMaterial;
 		this.skills = [];
 		this.selectedSkill = 0;
+		this.affectedSpot;
 	}
 
 	moveCamWithPlayer(){
@@ -17,14 +17,16 @@ class Player {
 
 	valid(spot){
 	    if(spot[0] >= 0 && spot[0] < cols && spot[1] >= 0 && spot[1] < rows){
-	    	this.removeSelect(); //sketchy?
+	    	if(this.selectSpot.length > 0){
+	    		this.removeSelect(); //sketchy?
+	    	}
 	        return true;
 	    }
 	    return false;
 	}
 
 	checkSpot(){
-	    if(this.valid(this.nextSpot) && map[this.nextSpot[1]][this.nextSpot[0]]["type"] !== "tree"){
+	    if(this.valid(this.nextSpot) && map[this.nextSpot[1]][this.nextSpot[0]].movable){
 	        this.sprite.position.x = this.nextSpot[0] * 10
 	        this.sprite.position.z = this.nextSpot[1] * -10
 	        this.spot[0] = this.nextSpot[0]
@@ -78,8 +80,8 @@ class Player {
 	}
 	checkSelect(){
 	    if(this.valid(this.nextSelectSpot)){
-	    	this.oldSelectMaterial = map[this.nextSelectSpot[1]][this.nextSelectSpot[0]]["sprite"].material
-	    	map[this.nextSelectSpot[1]][this.nextSelectSpot[0]]["sprite"].material = new THREE.MeshBasicMaterial( { color: "red"} );
+	    	this.oldSelectMaterial = map[this.nextSelectSpot[1]][this.nextSelectSpot[0]].sprite[0].material
+	    	map[this.nextSelectSpot[1]][this.nextSelectSpot[0]].sprite[0].material = new THREE.MeshBasicMaterial( { color: "red"} );
 	        this.selectSpot[0] = this.nextSelectSpot[0]
 	        this.selectSpot[1] = this.nextSelectSpot[1]
 	    }
@@ -90,8 +92,10 @@ class Player {
 	}
 
 	removeSelect(){
-		if(this.oldSelectMaterial){
-			map[this.selectSpot[1]][this.selectSpot[0]]["sprite"].material = this.oldSelectMaterial;
+		console.log(map[this.selectSpot[1]][this.selectSpot[0]].sprite[0].material)
+		if(map[this.selectSpot[1]][this.selectSpot[0]].sprite[0].material !== map[this.selectSpot[1]][this.selectSpot[0]].originalMaterial){
+			map[this.selectSpot[1]][this.selectSpot[0]].sprite[0].material = map[this.selectSpot[1]][this.selectSpot[0]].originalMaterial;
+			this.selectSpot = [];
 		}
 	}
 
@@ -106,18 +110,22 @@ class Player {
 		this.skills.push(tempSkill);
 	}
 	useSkill(){
-		if(this.selectSpot[0] !== this.spot[0] || this.selectSpot[1] !== this.spot[1]){
-			console.log(this.skills);
-			var skill = this.skills[this.selectedSkill]["sprite"];
-			console.log(skill);
+		if(this.selectSpot.length > 0){
+			var skill = this.skills[this.selectedSkill].sprite;
 			for(let x of skill){
 				x.position.x = this.selectSpot[0] * 10;
-				x.position.y = 10;
 			    x.position.z = this.selectSpot[1] * -10;
 			    scene.add(x);
 			    addHelper(x);
 			}
-		    this.removeSelect();
+		    map[this.selectSpot[1]][this.selectSpot[0]].interactedWith(this.skills[this.selectedSkill].name);
+		    if(this.affectedSpot !== map[this.selectSpot[1]][this.selectSpot[0]]){
+		    	if(this.affectedSpot){
+		    		this.affectedSpot.movable = this.affectedSpot.defaultMovable;
+		    	}
+		    	this.affectedSpot = map[this.selectSpot[1]][this.selectSpot[0]]
+			}
+		    this.removeSelect(); // i might need this
 		}
 	}
 

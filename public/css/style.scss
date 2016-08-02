@@ -6,3 +6,25 @@ body{ /*fix this if it becomes a real thing*/
   margin: 0px;
   overflow: hidden;
 }
+
+#interface {
+	position: fixed;
+	z-index: 2;
+}
+
+.skill {
+	position: fixed;
+	background-color: black;
+	height: 100px;
+	width: 100px;
+	border: solid white 0.5em;
+}
+
+/*THIS IS TEMPORARY AND SHOULD BE AN SVG
+*/#fire {
+	position: relative;
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	background-color: red;
+}
